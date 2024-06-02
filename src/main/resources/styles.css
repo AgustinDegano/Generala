@@ -1,0 +1,22 @@
+.stylish-checkbox {
+    -fx-font-size: 16px;
+    -fx-text-fill: #333;
+}
+
+.stylish-checkbox .box {
+    -fx-border-color: #0078D7;
+    -fx-border-width: 2;
+    -fx-background-color: transparent;
+    -fx-background-radius: 2;
+    -fx-border-radius: 2;
+    -fx-padding: 2;
+}
+
+.stylish-checkbox .box:hover {
+    -fx-border-color: #005A9E;
+}
+
+.stylish-checkbox:selected .box {
+    -fx-background-color: #0078D7;
+    -fx-border-color: #0078D7;
+}
