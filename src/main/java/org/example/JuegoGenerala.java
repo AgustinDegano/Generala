@@ -3,8 +3,8 @@ package org.example;
 import java.util.Arrays;
 
 public class JuegoGenerala {
-    private Jugador jugador1;
-    private Jugador jugador2;
+    private final Jugador jugador1;
+    private final Jugador jugador2;
     private Dado[] dados;
     private int turno;
     private int tirosRestantes;

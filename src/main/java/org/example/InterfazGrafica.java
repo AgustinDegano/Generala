@@ -1,129 +1,123 @@
 package org.example;
 
-import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
-import java.util.Objects;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class InterfazGrafica extends Application {
-
+public class InterfazGrafica extends JFrame {
     private JuegoGenerala juego;
-    private Label[] dadosLabels;
-    private CheckBox[] tirarDadoCheckboxes;
-    private Label turnoLabel;
-    private Label tirosRestantesLabel;
-    private Button lanzarButton;
-    private Button cambiarTurnoButton;
-    private VBox puntajesPanel1;
-    private VBox puntajesPanel2;
-    private ComboBox<String> categoriasComboBox;
-    private Button guardarPuntajeButton;
+    private JLabel[] dadosLabels;
+    private JCheckBox[] tirarDadoCheckboxes;
+    private JLabel turnoLabel;
+    private JLabel tirosRestantesLabel;
+    private JButton lanzarButton;
+    private JButton cambiarTurnoButton;
+    private JPanel puntajesPanel1;
+    private JPanel puntajesPanel2;
+    private JComboBox<String> categoriasComboBox;
+    private JButton guardarPuntajeButton;
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Generala");
+    public InterfazGrafica() {
+        setTitle("Generala");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
+        // Inicializar el juego
         juego = new JuegoGenerala("Jugador 1", "Jugador 2");
 
-        VBox root = new VBox();
-        root.setPadding(new Insets(10));
-        root.setSpacing(10);
-
         // Panel para los dados
-        GridPane dadosPanel = new GridPane();
-        dadosPanel.setHgap(10);
-        dadosPanel.setVgap(10);
-
-        dadosLabels = new Label[5];
-        tirarDadoCheckboxes = new CheckBox[5];
+        JPanel dadosPanel = new JPanel(new GridLayout(6, 1));
+        dadosLabels = new JLabel[5];
+        tirarDadoCheckboxes = new JCheckBox[5];
         for (int i = 0; i < 5; i++) {
-            dadosLabels[i] = new Label("DADO " + (i + 1) + ": ");
-            tirarDadoCheckboxes[i] = new CheckBox("Tirar");
-            tirarDadoCheckboxes[i].getStyleClass().add("stylish-checkbox");
-            dadosPanel.add(tirarDadoCheckboxes[i], 0, i);
-            dadosPanel.add(dadosLabels[i], 1, i);
+            dadosLabels[i] = new JLabel();
+            tirarDadoCheckboxes[i] = new JCheckBox("Tirar");
+            dadosPanel.add(tirarDadoCheckboxes[i]);
+            dadosPanel.add(dadosLabels[i]);
         }
 
         // Panel para el control de juego
-        turnoLabel = new Label("Turno de: " + juego.getJugadorActual().getNombre());
-        tirosRestantesLabel = new Label("Tiros restantes: " + juego.getTirosRestantes());
-        lanzarButton = new Button("Lanzar Dados");
-        lanzarButton.setOnAction(e -> lanzarDados());
-        cambiarTurnoButton = new Button("Cambiar Turno");
-        cambiarTurnoButton.setOnAction(e -> cambiarTurno());
+        JPanel controlPanel = new JPanel();
+        turnoLabel = new JLabel("Turno de: " + juego.getJugadorActual().getNombre());
+        tirosRestantesLabel = new JLabel("Tiros restantes: " + juego.getTirosRestantes());
+        lanzarButton = new JButton("Lanzar Dados");
+        lanzarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean[] tirar = new boolean[5];
+                for (int i = 0; i < 5; i++) {
+                    tirar[i] = tirarDadoCheckboxes[i].isSelected();
+                }
+                if (juego.getTirosRestantes() > 0) {
+                    juego.lanzarDados(tirar);
+                    int[] valores = juego.getValoresDados();
+                    for (int i = 0; i < 5; i++) {
+                        dadosLabels[i].setText("DADO " + (i + 1) + ": " + valores[i]);
+                    }
+                    tirosRestantesLabel.setText("Tiros restantes: " + juego.getTirosRestantes());
+                }
+                if (juego.getTirosRestantes() == 0) {
+                    lanzarButton.setEnabled(false);
+                }
+            }
+        });
 
-        categoriasComboBox = new ComboBox<>();
-        categoriasComboBox.getItems().addAll(juego.getJugadorActual().getCategorias());
-        guardarPuntajeButton = new Button("Guardar Puntaje");
-        guardarPuntajeButton.setOnAction(e -> guardarPuntaje());
+        cambiarTurnoButton = new JButton("Cambiar Turno");
+        cambiarTurnoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                juego.cambiarTurno();
+                turnoLabel.setText("Turno de: " + juego.getJugadorActual().getNombre());
+                tirosRestantesLabel.setText("Tiros restantes: " + juego.getTirosRestantes());
+                lanzarButton.setEnabled(true); // Habilitar botón de lanzar dados
+                // Marcar todos los checkboxes para tirar dados
+                for (int i = 0; i < 5; i++) {
+                    tirarDadoCheckboxes[i].setSelected(true);
+                }
+                actualizarPuntajes();
+            }
+        });
 
-        HBox controlPanel = new HBox(10, turnoLabel, tirosRestantesLabel, lanzarButton, cambiarTurnoButton, categoriasComboBox, guardarPuntajeButton);
+        categoriasComboBox = new JComboBox<>(juego.getJugadorActual().getCategorias());
+        guardarPuntajeButton = new JButton("Guardar Puntaje");
+        guardarPuntajeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int categoria = categoriasComboBox.getSelectedIndex();
+                int puntaje = juego.calcularPuntaje(categoria);
+                juego.getJugadorActual().setPuntaje(categoria, puntaje);
+                actualizarPuntajes();
+            }
+        });
+
+        controlPanel.add(turnoLabel);
+        controlPanel.add(tirosRestantesLabel);
+        controlPanel.add(lanzarButton);
+        controlPanel.add(cambiarTurnoButton);
+        controlPanel.add(categoriasComboBox);
+        controlPanel.add(guardarPuntajeButton);
 
         // Panel para los puntajes
-        HBox puntajesPanel = new HBox(10);
-        puntajesPanel1 = new VBox(5);
-        puntajesPanel2 = new VBox(5);
-
-        puntajesPanel.getChildren().addAll(puntajesPanel1, puntajesPanel2);
+        JPanel puntajesPanel = new JPanel(new GridLayout(1, 2));
+        puntajesPanel1 = new JPanel(new GridLayout(13, 2));
+        puntajesPanel2 = new JPanel(new GridLayout(13, 2));
 
         actualizarPuntajes();
 
-        root.getChildren().addAll(dadosPanel, controlPanel, puntajesPanel);
+        puntajesPanel.add(puntajesPanel1);
+        puntajesPanel.add(puntajesPanel2);
 
-        Scene scene = new Scene(root, 800, 600);
-        scene.getStylesheets().add(Objects.requireNonNull(Objects.requireNonNull(Objects.requireNonNull(getClass().getResource("/styles.css")))).toExternalForm());
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
-
-    private void lanzarDados() {
-        boolean[] tirar = new boolean[5];
-        for (int i = 0; i < 5; i++) {
-            tirar[i] = tirarDadoCheckboxes[i].isSelected();
-        }
-        if (juego.getTirosRestantes() > 0) {
-            juego.lanzarDados(tirar);
-            int[] valores = juego.getValoresDados();
-            for (int i = 0; i < 5; i++) {
-                dadosLabels[i].setText("DADO " + (i + 1) + ": " + valores[i]);
-            }
-            tirosRestantesLabel.setText("Tiros restantes: " + juego.getTirosRestantes());
-        }
-        if (juego.getTirosRestantes() == 0) {
-            lanzarButton.setDisable(true);
-        }
-    }
-
-    private void cambiarTurno() {
-        juego.cambiarTurno();
-        turnoLabel.setText("Turno de: " + juego.getJugadorActual().getNombre());
-        tirosRestantesLabel.setText("Tiros restantes: " + juego.getTirosRestantes());
-        lanzarButton.setDisable(false);
-        for (int i = 0; i < 5; i++) {
-            tirarDadoCheckboxes[i].setSelected(true);
-        }
-        actualizarPuntajes();
-    }
-
-    private void guardarPuntaje() {
-        int categoria = categoriasComboBox.getSelectionModel().getSelectedIndex();
-        int puntaje = juego.calcularPuntaje(categoria);
-        juego.getJugadorActual().setPuntaje(categoria, puntaje);
-        actualizarPuntajes();
+        add(dadosPanel, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.SOUTH);
+        add(puntajesPanel, BorderLayout.EAST);
     }
 
     private void actualizarPuntajes() {
-        puntajesPanel1.getChildren().clear();
-        puntajesPanel2.getChildren().clear();
+        puntajesPanel1.removeAll();
+        puntajesPanel2.removeAll();
 
         Jugador jugador1 = juego.getJugadorActual();
         Jugador jugador2 = juego.getJugadorActual();
@@ -131,15 +125,21 @@ public class InterfazGrafica extends Application {
         String[] categorias = jugador1.getCategorias();
 
         for (int i = 0; i < categorias.length; i++) {
-            puntajesPanel1.getChildren().add(new Label(categorias[i]));
-            puntajesPanel1.getChildren().add(new Label(String.valueOf(jugador1.getPuntajes()[i])));
+            puntajesPanel1.add(new JLabel(categorias[i]));
+            puntajesPanel1.add(new JLabel(String.valueOf(jugador1.getPuntajes()[i])));
 
-            puntajesPanel2.getChildren().add(new Label(categorias[i]));
-            puntajesPanel2.getChildren().add(new Label(String.valueOf(jugador2.getPuntajes()[i])));
+            puntajesPanel2.add(new JLabel(categorias[i]));
+            puntajesPanel2.add(new JLabel(String.valueOf(jugador2.getPuntajes()[i])));
         }
+
+        puntajesPanel1.revalidate();
+        puntajesPanel1.repaint();
+        puntajesPanel2.revalidate();
+        puntajesPanel2.repaint();
     }
 
     public static void main(String[] args) {
-        launch(args);
+        InterfazGrafica ventana = new InterfazGrafica();
+        ventana.setVisible(true);
     }
 }
