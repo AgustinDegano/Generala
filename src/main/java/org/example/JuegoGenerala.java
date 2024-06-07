@@ -1,102 +1,121 @@
 package org.example;
 
-import java.util.Arrays;
-
 public class JuegoGenerala {
-    private final Jugador jugador1;
-    private final Jugador jugador2;
-    private Dado[] dados;
-    private int turno;
+    private Jugador[] jugadores;
+    private int jugadorActual;
     private int tirosRestantes;
+    private int[] valoresDados;
 
-    public JuegoGenerala(String nombre1, String nombre2) {
-        jugador1 = new Jugador(nombre1);
-        jugador2 = new Jugador(nombre2);
-        dados = new Dado[5];
-        for (int i = 0; i < 5; i++) {
-            dados[i] = new Dado();
-        }
-        turno = 1;
-        tirosRestantes = 3; // Cada jugador tiene 3 tiros por turno
+    public JuegoGenerala(String nombreJugador1, String nombreJugador2) {
+        jugadores = new Jugador[2];
+        jugadores[0] = new Jugador(nombreJugador1);
+        jugadores[1] = new Jugador(nombreJugador2);
+        jugadorActual = 0;
+        tirosRestantes = 3;
+        valoresDados = new int[5];
     }
 
-    public void lanzarDados(boolean[] relanzar) {
-        for (int i = 0; i < dados.length; i++) {
-            if (relanzar[i]) {
-                dados[i].lanzar();
-            }
+    public Jugador getJugador(int indice) {
+        if (indice >= 0 && indice < jugadores.length) {
+            return jugadores[indice];
+        } else {
+            throw new IllegalArgumentException("Índice de jugador no válido");
         }
-        tirosRestantes--;
-    }
-
-    public int[] getValoresDados() {
-        int[] valores = new int[5];
-        for (int i = 0; i < 5; i++) {
-            valores[i] = dados[i].getValor();
-        }
-        return valores;
     }
 
     public Jugador getJugadorActual() {
-        return turno == 1 ? jugador1 : jugador2;
+        return jugadores[jugadorActual];
     }
 
     public int getTirosRestantes() {
         return tirosRestantes;
     }
 
+    public void lanzarDados(boolean[] tirar) {
+        for (int i = 0; i < valoresDados.length; i++) {
+            if (tirar[i]) {
+                valoresDados[i] = (int) (Math.random() * 6) + 1;
+            }
+        }
+        tirosRestantes--;
+    }
+
+    public int[] getValoresDados() {
+        return valoresDados;
+    }
+
     public void cambiarTurno() {
-        turno = turno == 1 ? 2 : 1;
-        tirosRestantes = 3; // Reseteamos los tiros para el siguiente jugador
+        jugadorActual = (jugadorActual + 1) % 2;
+        tirosRestantes = 3;
     }
 
     public int calcularPuntaje(int categoria) {
-        int[] valores = getValoresDados();
-        Arrays.sort(valores);
-        switch (categoria) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5: // Números del 1 al 6
-                int numero = categoria + 1;
-                int suma = 0;
-                for (int valor : valores) {
-                    if (valor == numero) {
-                        suma += numero;
-                    }
-                }
-                return suma;
-            case 6: // Escalera
-                if (Arrays.equals(valores, new int[]{1, 2, 3, 4, 5}) || Arrays.equals(valores, new int[]{2, 3, 4, 5, 6})) {
-                    return 25;
-                }
-                return 0;
-            case 7: // Full
-                if ((valores[0] == valores[1] && valores[2] == valores[3] && valores[3] == valores[4]) ||
-                        (valores[0] == valores[1] && valores[1] == valores[2] && valores[3] == valores[4])) {
-                    return 30;
-                }
-                return 0;
-            case 8: // Poker
-                if ((valores[0] == valores[1] && valores[1] == valores[2] && valores[2] == valores[3]) ||
-                        (valores[1] == valores[2] && valores[2] == valores[3] && valores[3] == valores[4])) {
-                    return 40;
-                }
-                return 0;
-            case 9: // Generala
-                if (valores[0] == valores[1] && valores[1] == valores[2] && valores[2] == valores[3] && valores[3] == valores[4]) {
-                    return 50;
-                }
-                return 0;
-            case 10: // Doble Generala
-                if (valores[0] == valores[1] && valores[1] == valores[2] && valores[2] == valores[3] && valores[3] == valores[4]) {
-                    return 100;
-                }
-                return 0;
-            default:
-                return 0;
+        int[] conteo = new int[6];
+        for (int valor : valoresDados) {
+            conteo[valor - 1]++;
         }
+
+        switch (categoria) {
+            case 0: // Escalera
+                boolean escalera = (conteo[0] >= 1 && conteo[1] >= 1 && conteo[2] >= 1 && conteo[3] >= 1 && conteo[4] >= 1) ||
+                        (conteo[1] >= 1 && conteo[2] >= 1 && conteo[3] >= 1 && conteo[4] >= 1 && conteo[5] >= 1);
+                return escalera ? 25 : 0;
+            case 1: // Full
+                boolean trio = false, par = false;
+                for (int c : conteo) {
+                    if (c == 3) trio = true;
+                    if (c == 2) par = true;
+                }
+                return (trio && par) ? 30 : 0;
+            case 2: // Poker
+                for (int c : conteo) {
+                    if (c >= 4) return 40;
+                }
+                return 0;
+            case 3: // Generala
+                for (int c : conteo) {
+                    if (c == 5) return 50;
+                }
+                return 0;
+            case 4: // Unos
+            case 5: // Doses
+            case 6: // Treses
+            case 7: // Cuatros
+            case 8: // Cincos
+            case 9: // Seises
+                int numero = categoria - 3;
+                return conteo[numero - 1] * numero;
+            default:
+                throw new IllegalArgumentException("Categoría no válida");
+        }
+    }
+}
+
+class Jugador {
+    private String nombre;
+    private int[] puntajes;
+    private String[] categorias = {
+            "Escalera", "Full", "Poker", "Generala", "1", "2", "3", "4", "5", "6"
+    };
+
+    public Jugador(String nombre) {
+        this.nombre = nombre;
+        puntajes = new int[categorias.length];
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public int[] getPuntajes() {
+        return puntajes;
+    }
+
+    public String[] getCategorias() {
+        return categorias;
+    }
+
+    public void setPuntaje(int categoria, int puntaje) {
+        puntajes[categoria] = puntaje;
     }
 }

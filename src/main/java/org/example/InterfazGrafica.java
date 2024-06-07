@@ -1,6 +1,4 @@
 package org.example;
-
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -14,8 +12,7 @@ public class InterfazGrafica extends JFrame {
     private JLabel tirosRestantesLabel;
     private JButton lanzarButton;
     private JButton cambiarTurnoButton;
-    private JPanel puntajesPanel1;
-    private JPanel puntajesPanel2;
+    private JPanel puntajesPanel;
     private JComboBox<String> categoriasComboBox;
     private JButton guardarPuntajeButton;
 
@@ -29,14 +26,17 @@ public class InterfazGrafica extends JFrame {
         juego = new JuegoGenerala("Jugador 1", "Jugador 2");
 
         // Panel para los dados
-        JPanel dadosPanel = new JPanel(new GridLayout(6, 1));
+        JPanel dadosPanel = new JPanel(new GridLayout(6, 2));
         dadosLabels = new JLabel[5];
         tirarDadoCheckboxes = new JCheckBox[5];
         for (int i = 0; i < 5; i++) {
-            dadosLabels[i] = new JLabel();
+            dadosLabels[i] = new JLabel("DADO " + (i + 1) + ": ", SwingConstants.CENTER);
+            dadosLabels[i].setFont(new Font("Arial", Font.BOLD, 24));
+            dadosLabels[i].setForeground(Color.RED);
             tirarDadoCheckboxes[i] = new JCheckBox("Tirar");
-            dadosPanel.add(tirarDadoCheckboxes[i]);
+            tirarDadoCheckboxes[i].setSelected(true);
             dadosPanel.add(dadosLabels[i]);
+            dadosPanel.add(tirarDadoCheckboxes[i]);
         }
 
         // Panel para el control de juego
@@ -101,14 +101,9 @@ public class InterfazGrafica extends JFrame {
         controlPanel.add(guardarPuntajeButton);
 
         // Panel para los puntajes
-        JPanel puntajesPanel = new JPanel(new GridLayout(1, 2));
-        puntajesPanel1 = new JPanel(new GridLayout(13, 2));
-        puntajesPanel2 = new JPanel(new GridLayout(13, 2));
+        puntajesPanel = new JPanel(new GridLayout(13, 3));
 
         actualizarPuntajes();
-
-        puntajesPanel.add(puntajesPanel1);
-        puntajesPanel.add(puntajesPanel2);
 
         add(dadosPanel, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.SOUTH);
@@ -116,26 +111,25 @@ public class InterfazGrafica extends JFrame {
     }
 
     private void actualizarPuntajes() {
-        puntajesPanel1.removeAll();
-        puntajesPanel2.removeAll();
+        puntajesPanel.removeAll();
 
-        Jugador jugador1 = juego.getJugadorActual();
-        Jugador jugador2 = juego.getJugadorActual();
+        Jugador jugador1 = juego.getJugador(0);
+        Jugador jugador2 = juego.getJugador(1);
 
         String[] categorias = jugador1.getCategorias();
 
-        for (int i = 0; i < categorias.length; i++) {
-            puntajesPanel1.add(new JLabel(categorias[i]));
-            puntajesPanel1.add(new JLabel(String.valueOf(jugador1.getPuntajes()[i])));
+        puntajesPanel.add(new JLabel("Categoría"));
+        puntajesPanel.add(new JLabel(jugador1.getNombre()));
+        puntajesPanel.add(new JLabel(jugador2.getNombre()));
 
-            puntajesPanel2.add(new JLabel(categorias[i]));
-            puntajesPanel2.add(new JLabel(String.valueOf(jugador2.getPuntajes()[i])));
+        for (int i = 0; i < categorias.length; i++) {
+            puntajesPanel.add(new JLabel(categorias[i]));
+            puntajesPanel.add(new JLabel(String.valueOf(jugador1.getPuntajes()[i])));
+            puntajesPanel.add(new JLabel(String.valueOf(jugador2.getPuntajes()[i])));
         }
 
-        puntajesPanel1.revalidate();
-        puntajesPanel1.repaint();
-        puntajesPanel2.revalidate();
-        puntajesPanel2.repaint();
+        puntajesPanel.revalidate();
+        puntajesPanel.repaint();
     }
 
     public static void main(String[] args) {
